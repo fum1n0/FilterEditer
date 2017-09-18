@@ -209,7 +209,9 @@ void Config::convolution() {
 		amp = 0.0;
 		wav[i] = wave_base[i].left / 32768.0;
 		for (long j = 0; j < a.size(); j++) {
-			if (0 <= i - j)amp += a[j] * wav[i - j];
+			//if (0 <= i - j)amp += a[j] * wav[i - j]; // IIR
+			if (0 <= i - j)amp += a[j] * wave_base[i - j].left / 32768.0; // FIR
+
 		}
 		wav[i] = amp;
 	}
