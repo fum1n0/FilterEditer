@@ -34,11 +34,13 @@ Config::Config() {
 	gui.addln(L"resolution", GUISlider::Create(10, 100.0, 10, 200));
 
 	gui.add(L"normalization", GUIToggleSwitch::Create(L"îÒê≥ãKâª", L"ê≥ãKâª", false));
+	gui.add(L"filter", GUIToggleSwitch::Create(L"IIR", L"FIR", true));
 
 	a = std::vector<double>(gui.slider(L"degree")._get_valueInt(), 0);
 	resolution_fir = 1.0 / (double)gui.slider(L"resolution").valueInt;
 	font = Font(20);
 	normalization = false;
+	filter = true;
 }
 
 
@@ -105,17 +107,32 @@ void Config::isReaction() {
 			if (abs(std::accumulate(a.begin(), a.end(), 0.0)) <= 1.0) {
 				gui.toggleSwitch(L"normalization").setLeft();
 				normalization = false;
-			}else {
+			}
+			else {
 				gui.toggleSwitch(L"normalization").setRight();
 				normalization = true;
 			}
-		}else {
+		}
+		else {
 			gui.toggleSwitch(L"normalization").setRight();
 			normalization = true;
 		}
 
 	}
-	
+
+
+	if (gui.toggleSwitch(L"filter").hasChanged) {
+		if (filter) {
+			gui.toggleSwitch(L"filter").setLeft();
+			filter = false;
+		}
+		else {
+			gui.toggleSwitch(L"filter").setRight();
+			filter = true;
+		}
+	}
+
+
 	if (Input::MouseL.clicked) {
 		if (!gui.style.visible) {
 			parameter = this->calcArea(Mouse::Pos().x, Mouse::Pos().y);
@@ -180,7 +197,7 @@ void Config::draw() {
 	for (unsigned int i = 0; i < a.size(); i++) {
 		RectF((i + 1) * resolution_x, Window::Height(), 3, -Window::Height()).draw(HSV(0.0, 0.0, 1.0));
 	}
-	RectF(0.0, (Window::Height()/2)-1, Window::Width(), 3.0).draw(HSV(0.0, 0.0, 1.0));
+	RectF(0.0, (Window::Height() / 2) - 1, Window::Width(), 3.0).draw(HSV(0.0, 0.0, 1.0));
 
 
 	// now_position
@@ -188,7 +205,7 @@ void Config::draw() {
 	if (0 <= here.second && here.second < a.size()) {
 		str = std::to_string(a[here.second]);
 		str = str.substr(0, 5);
-		font(L"a["+Widen(std::to_string(here.second)) + L"]").draw(Mouse::Pos().x + 15, Mouse::Pos().y - 15);
+		font(L"a[" + Widen(std::to_string(here.second)) + L"]").draw(Mouse::Pos().x + 15, Mouse::Pos().y - 15);
 		font(Widen(str)).draw(Mouse::Pos().x + 15, Mouse::Pos().y + 15);
 	}
 }
@@ -209,9 +226,10 @@ void Config::convolution() {
 		amp = 0.0;
 		wav[i] = wave_base[i].left / 32768.0;
 		for (long j = 0; j < a.size(); j++) {
-			//if (0 <= i - j)amp += a[j] * wav[i - j]; // IIR
-			if (0 <= i - j)amp += a[j] * wave_base[i - j].left / 32768.0; // FIR
-
+			if (0 <= i - j) {
+				if (filter)	amp += a[j] * wave_base[i - j].left / 32768.0; // FIR
+				else if (0 <= i - j)amp += a[j] * wav[i - j]; // IIR 
+			}
 		}
 		wav[i] = amp;
 	}

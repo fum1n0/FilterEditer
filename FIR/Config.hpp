@@ -29,6 +29,7 @@ private:
 	Font font;
 
 	bool normalization;
+	bool filter;
 
 public:
 
