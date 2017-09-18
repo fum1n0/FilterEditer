@@ -5,7 +5,7 @@ void Main()
 {
 	const Font font(20);
 	ScalableWindow::Setup(600, 480);
-	Window::SetTitle(L"FIR Editer");	
+	Window::SetTitle(L"Filter Editer");	
 
 	std::shared_ptr<Config>config = std::make_shared<Config>();
 
